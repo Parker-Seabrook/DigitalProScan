@@ -2,11 +2,16 @@ import { useState } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
-  FileText, 
+  Users, 
+  Map,
+  AlertTriangle,
+  BarChart3,
+  Briefcase,
+  MapPin,
   Settings, 
   Menu, 
   X,
-  ScanLine,
+  Radio,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -15,14 +20,18 @@ import { cn } from '@/lib/utils';
 
 const navItems = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/documents', icon: FileText, label: 'Documents' },
+  { path: '/team', icon: Users, label: 'Team Members' },
+  { path: '/map', icon: Map, label: 'Live Map' },
+  { path: '/alerts', icon: AlertTriangle, label: 'Alerts' },
+  { path: '/reports', icon: BarChart3, label: 'Reports' },
+  { path: '/jobs', icon: Briefcase, label: 'Jobs/WO' },
+  { path: '/geofences', icon: MapPin, label: 'Geofences' },
   { path: '/settings', icon: Settings, label: 'Settings' },
 ];
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const location = useLocation();
 
   return (
     <div className="flex min-h-screen bg-white">
@@ -39,7 +48,7 @@ export default function Layout() {
           {sidebarOpen && (
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-[var(--accent-primary)] flex items-center justify-center">
-                <ScanLine className="w-5 h-5 text-white" strokeWidth={1.5} />
+                <Radio className="w-5 h-5 text-white" strokeWidth={1.5} />
               </div>
               <span className="font-bold text-lg tracking-tight font-['Cabinet_Grotesk']">
                 ProScan
@@ -48,19 +57,20 @@ export default function Layout() {
           )}
           {!sidebarOpen && (
             <div className="w-8 h-8 bg-[var(--accent-primary)] flex items-center justify-center mx-auto">
-              <ScanLine className="w-5 h-5 text-white" strokeWidth={1.5} />
+              <Radio className="w-5 h-5 text-white" strokeWidth={1.5} />
             </div>
           )}
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-6 px-3">
+        <nav className="flex-1 py-4 px-3 overflow-y-auto">
           <ul className="space-y-1">
             {navItems.map((item) => (
               <li key={item.path}>
                 <NavLink
                   to={item.path}
-                  data-testid={`nav-${item.label.toLowerCase()}`}
+                  end={item.path === '/'}
+                  data-testid={`nav-${item.label.toLowerCase().replace(/\//g, '-')}`}
                   className={({ isActive }) => cn(
                     "flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors duration-150",
                     isActive 
@@ -103,10 +113,10 @@ export default function Layout() {
         <header className="proscan-header h-14 flex items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 bg-[var(--accent-primary)] flex items-center justify-center">
-              <ScanLine className="w-4 h-4 text-white" strokeWidth={1.5} />
+              <Radio className="w-4 h-4 text-white" strokeWidth={1.5} />
             </div>
             <span className="font-bold text-base tracking-tight font-['Cabinet_Grotesk']">
-              ProScan
+              Digital ProScan
             </span>
           </div>
           <Button
@@ -125,14 +135,15 @@ export default function Layout() {
 
         {/* Mobile Menu Overlay */}
         {mobileMenuOpen && (
-          <div className="absolute top-14 left-0 right-0 bg-white border-b border-[var(--border-subtle)] shadow-lg animate-slide-up">
+          <div className="absolute top-14 left-0 right-0 bg-white border-b border-[var(--border-subtle)] shadow-lg animate-slide-up max-h-[calc(100vh-56px)] overflow-y-auto">
             <nav className="py-2">
               {navItems.map((item) => (
                 <NavLink
                   key={item.path}
                   to={item.path}
+                  end={item.path === '/'}
                   onClick={() => setMobileMenuOpen(false)}
-                  data-testid={`mobile-nav-${item.label.toLowerCase()}`}
+                  data-testid={`mobile-nav-${item.label.toLowerCase().replace(/\//g, '-')}`}
                   className={({ isActive }) => cn(
                     "flex items-center gap-3 px-4 py-3 text-sm font-medium",
                     isActive 
@@ -150,7 +161,7 @@ export default function Layout() {
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 lg:pt-0 pt-14">
+      <main className="flex-1 lg:pt-0 pt-14 overflow-x-hidden">
         <Outlet />
       </main>
     </div>

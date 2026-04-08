@@ -4,11 +4,10 @@ import {
   Bell,
   Shield,
   Palette,
-  Cloud,
-  HardDrive,
   Info,
   Save,
-  Check
+  Check,
+  Radio
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -27,25 +26,24 @@ import { toast } from 'sonner';
 
 export default function Settings() {
   const [settings, setSettings] = useState({
-    userName: 'John Doe',
-    email: 'john.doe@example.com',
+    companyName: 'Digital ProScan',
+    adminEmail: 'admin@proscan.com',
     notifications: {
-      email: true,
-      desktop: false,
-      scanComplete: true,
-      weeklyDigest: false
+      sosAlerts: true,
+      workDelayAlerts: true,
+      geofenceAlerts: true,
+      emailNotifications: true,
+      smsNotifications: false,
+      dailyDigest: true
     },
-    appearance: {
-      theme: 'light',
-      defaultView: 'grid'
-    },
-    storage: {
-      autoDelete: false,
-      deleteAfterDays: 30
+    tracking: {
+      updateInterval: '15',
+      speedThreshold: '5',
+      workDelayThreshold: '30'
     },
     privacy: {
-      analytics: true,
-      crashReports: true
+      dataRetention: '90',
+      anonymizeReports: false
     }
   });
 
@@ -79,39 +77,39 @@ export default function Settings() {
           Settings
         </h1>
         <p className="text-sm text-[var(--text-secondary)] mt-2">
-          Manage your account preferences and application settings.
+          Configure system preferences and notifications
         </p>
       </div>
 
       <div className="space-y-6">
-        {/* Profile */}
+        {/* General */}
         <Card className="proscan-card animate-stagger stagger-1">
           <CardHeader>
             <CardTitle className="text-lg font-semibold font-['Cabinet_Grotesk'] flex items-center gap-2">
-              <User className="w-5 h-5" strokeWidth={1.5} />
-              Profile
+              <Radio className="w-5 h-5" strokeWidth={1.5} />
+              General
             </CardTitle>
-            <CardDescription>Your personal information and account details.</CardDescription>
+            <CardDescription>Basic system configuration</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="company">Company Name</Label>
                 <Input
-                  id="name"
-                  value={settings.userName}
-                  onChange={(e) => updateSetting('userName', e.target.value)}
-                  data-testid="settings-name-input"
+                  id="company"
+                  value={settings.companyName}
+                  onChange={(e) => updateSetting('companyName', e.target.value)}
+                  data-testid="company-name-input"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="admin-email">Admin Email</Label>
                 <Input
-                  id="email"
+                  id="admin-email"
                   type="email"
-                  value={settings.email}
-                  onChange={(e) => updateSetting('email', e.target.value)}
-                  data-testid="settings-email-input"
+                  value={settings.adminEmail}
+                  onChange={(e) => updateSetting('adminEmail', e.target.value)}
+                  data-testid="admin-email-input"
                 />
               </div>
             </div>
@@ -125,230 +123,196 @@ export default function Settings() {
               <Bell className="w-5 h-5" strokeWidth={1.5} />
               Notifications
             </CardTitle>
-            <CardDescription>Configure how you receive notifications.</CardDescription>
+            <CardDescription>Configure alert and notification preferences</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">Email Notifications</p>
-                <p className="text-xs text-[var(--text-secondary)]">Receive updates via email</p>
+                <p className="text-sm font-medium">SOS Alert Notifications</p>
+                <p className="text-xs text-[var(--text-secondary)]">Receive immediate alerts for emergencies</p>
               </div>
               <Switch
-                checked={settings.notifications.email}
-                onCheckedChange={(checked) => updateSetting('notifications.email', checked)}
+                checked={settings.notifications.sosAlerts}
+                onCheckedChange={(checked) => updateSetting('notifications.sosAlerts', checked)}
+                data-testid="sos-alerts-toggle"
+              />
+            </div>
+            <Separator />
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Work Delay Alerts</p>
+                <p className="text-xs text-[var(--text-secondary)]">Notify when team members report work delays</p>
+              </div>
+              <Switch
+                checked={settings.notifications.workDelayAlerts}
+                onCheckedChange={(checked) => updateSetting('notifications.workDelayAlerts', checked)}
+                data-testid="work-delay-toggle"
+              />
+            </div>
+            <Separator />
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Geofence Alerts</p>
+                <p className="text-xs text-[var(--text-secondary)]">Notify when team members enter/exit geofences</p>
+              </div>
+              <Switch
+                checked={settings.notifications.geofenceAlerts}
+                onCheckedChange={(checked) => updateSetting('notifications.geofenceAlerts', checked)}
+                data-testid="geofence-alerts-toggle"
+              />
+            </div>
+            <Separator />
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Email Notifications</p>
+                <p className="text-xs text-[var(--text-secondary)]">Receive alerts via email</p>
+              </div>
+              <Switch
+                checked={settings.notifications.emailNotifications}
+                onCheckedChange={(checked) => updateSetting('notifications.emailNotifications', checked)}
                 data-testid="email-notifications-toggle"
               />
             </div>
             <Separator />
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">Desktop Notifications</p>
-                <p className="text-xs text-[var(--text-secondary)]">Show browser notifications</p>
+                <p className="text-sm font-medium">SMS Notifications</p>
+                <p className="text-xs text-[var(--text-secondary)]">Receive alerts via text message</p>
               </div>
               <Switch
-                checked={settings.notifications.desktop}
-                onCheckedChange={(checked) => updateSetting('notifications.desktop', checked)}
-                data-testid="desktop-notifications-toggle"
+                checked={settings.notifications.smsNotifications}
+                onCheckedChange={(checked) => updateSetting('notifications.smsNotifications', checked)}
+                data-testid="sms-notifications-toggle"
               />
             </div>
             <Separator />
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">Scan Complete Alerts</p>
-                <p className="text-xs text-[var(--text-secondary)]">Notify when OCR extraction completes</p>
+                <p className="text-sm font-medium">Daily Digest</p>
+                <p className="text-xs text-[var(--text-secondary)]">Receive daily summary of team activity</p>
               </div>
               <Switch
-                checked={settings.notifications.scanComplete}
-                onCheckedChange={(checked) => updateSetting('notifications.scanComplete', checked)}
-                data-testid="scan-complete-toggle"
-              />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Weekly Digest</p>
-                <p className="text-xs text-[var(--text-secondary)]">Summary of your document activity</p>
-              </div>
-              <Switch
-                checked={settings.notifications.weeklyDigest}
-                onCheckedChange={(checked) => updateSetting('notifications.weeklyDigest', checked)}
-                data-testid="weekly-digest-toggle"
+                checked={settings.notifications.dailyDigest}
+                onCheckedChange={(checked) => updateSetting('notifications.dailyDigest', checked)}
+                data-testid="daily-digest-toggle"
               />
             </div>
           </CardContent>
         </Card>
 
-        {/* Appearance */}
+        {/* Tracking Settings */}
         <Card className="proscan-card animate-stagger stagger-3">
           <CardHeader>
             <CardTitle className="text-lg font-semibold font-['Cabinet_Grotesk'] flex items-center gap-2">
               <Palette className="w-5 h-5" strokeWidth={1.5} />
-              Appearance
+              Tracking Configuration
             </CardTitle>
-            <CardDescription>Customize how the application looks.</CardDescription>
+            <CardDescription>Configure GPS and status tracking parameters</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>Theme</Label>
+                <Label>Location Update Interval</Label>
                 <Select
-                  value={settings.appearance.theme}
-                  onValueChange={(value) => updateSetting('appearance.theme', value)}
+                  value={settings.tracking.updateInterval}
+                  onValueChange={(value) => updateSetting('tracking.updateInterval', value)}
                 >
-                  <SelectTrigger data-testid="theme-select">
+                  <SelectTrigger data-testid="update-interval-select">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="light">Light</SelectItem>
-                    <SelectItem value="dark">Dark</SelectItem>
-                    <SelectItem value="system">System</SelectItem>
+                    <SelectItem value="5">5 seconds</SelectItem>
+                    <SelectItem value="15">15 seconds</SelectItem>
+                    <SelectItem value="30">30 seconds</SelectItem>
+                    <SelectItem value="60">1 minute</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Default View</Label>
+                <Label>Traveling Speed Threshold</Label>
                 <Select
-                  value={settings.appearance.defaultView}
-                  onValueChange={(value) => updateSetting('appearance.defaultView', value)}
+                  value={settings.tracking.speedThreshold}
+                  onValueChange={(value) => updateSetting('tracking.speedThreshold', value)}
                 >
-                  <SelectTrigger data-testid="default-view-select">
+                  <SelectTrigger data-testid="speed-threshold-select">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="grid">Grid</SelectItem>
-                    <SelectItem value="list">List</SelectItem>
+                    <SelectItem value="3">3 mph</SelectItem>
+                    <SelectItem value="5">5 mph</SelectItem>
+                    <SelectItem value="10">10 mph</SelectItem>
+                    <SelectItem value="15">15 mph</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-[var(--text-secondary)]">
+                  Auto-set "Traveling" status when speed exceeds this value
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label>Work Delay Alert Threshold</Label>
+                <Select
+                  value={settings.tracking.workDelayThreshold}
+                  onValueChange={(value) => updateSetting('tracking.workDelayThreshold', value)}
+                >
+                  <SelectTrigger data-testid="delay-threshold-select">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="15">15 minutes</SelectItem>
+                    <SelectItem value="30">30 minutes</SelectItem>
+                    <SelectItem value="45">45 minutes</SelectItem>
+                    <SelectItem value="60">1 hour</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-[var(--text-secondary)]">
+                  Send alert when work delay exceeds this duration
+                </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Storage */}
-        <Card className="proscan-card animate-stagger stagger-4">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold font-['Cabinet_Grotesk'] flex items-center gap-2">
-              <HardDrive className="w-5 h-5" strokeWidth={1.5} />
-              Storage
-            </CardTitle>
-            <CardDescription>Manage document storage settings.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Auto-delete Old Documents</p>
-                <p className="text-xs text-[var(--text-secondary)]">Automatically remove documents after a period</p>
-              </div>
-              <Switch
-                checked={settings.storage.autoDelete}
-                onCheckedChange={(checked) => updateSetting('storage.autoDelete', checked)}
-                data-testid="auto-delete-toggle"
-              />
-            </div>
-            {settings.storage.autoDelete && (
-              <div className="pl-4 border-l-2 border-[var(--border-subtle)]">
-                <div className="space-y-2">
-                  <Label>Delete documents after</Label>
-                  <Select
-                    value={String(settings.storage.deleteAfterDays)}
-                    onValueChange={(value) => updateSetting('storage.deleteAfterDays', parseInt(value))}
-                  >
-                    <SelectTrigger className="w-48" data-testid="delete-after-select">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="7">7 days</SelectItem>
-                      <SelectItem value="30">30 days</SelectItem>
-                      <SelectItem value="90">90 days</SelectItem>
-                      <SelectItem value="365">1 year</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
 
         {/* Privacy */}
-        <Card className="proscan-card animate-stagger stagger-5">
+        <Card className="proscan-card animate-stagger stagger-4">
           <CardHeader>
             <CardTitle className="text-lg font-semibold font-['Cabinet_Grotesk'] flex items-center gap-2">
               <Shield className="w-5 h-5" strokeWidth={1.5} />
-              Privacy
+              Privacy & Data
             </CardTitle>
-            <CardDescription>Control your data and privacy settings.</CardDescription>
+            <CardDescription>Data retention and privacy settings</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Usage Analytics</p>
-                <p className="text-xs text-[var(--text-secondary)]">Help improve ProScan with anonymous usage data</p>
-              </div>
-              <Switch
-                checked={settings.privacy.analytics}
-                onCheckedChange={(checked) => updateSetting('privacy.analytics', checked)}
-                data-testid="analytics-toggle"
-              />
+            <div className="space-y-2">
+              <Label>Data Retention Period</Label>
+              <Select
+                value={settings.privacy.dataRetention}
+                onValueChange={(value) => updateSetting('privacy.dataRetention', value)}
+              >
+                <SelectTrigger className="w-48" data-testid="data-retention-select">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="30">30 days</SelectItem>
+                  <SelectItem value="90">90 days</SelectItem>
+                  <SelectItem value="180">6 months</SelectItem>
+                  <SelectItem value="365">1 year</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-[var(--text-secondary)]">
+                Location and activity data older than this will be automatically deleted
+              </p>
             </div>
             <Separator />
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">Crash Reports</p>
-                <p className="text-xs text-[var(--text-secondary)]">Send crash reports to help fix bugs</p>
+                <p className="text-sm font-medium">Anonymize Reports</p>
+                <p className="text-xs text-[var(--text-secondary)]">Hide employee names in exported reports</p>
               </div>
               <Switch
-                checked={settings.privacy.crashReports}
-                onCheckedChange={(checked) => updateSetting('privacy.crashReports', checked)}
-                data-testid="crash-reports-toggle"
+                checked={settings.privacy.anonymizeReports}
+                onCheckedChange={(checked) => updateSetting('privacy.anonymizeReports', checked)}
+                data-testid="anonymize-toggle"
               />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Cloud Integration */}
-        <Card className="proscan-card animate-stagger stagger-6">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold font-['Cabinet_Grotesk'] flex items-center gap-2">
-              <Cloud className="w-5 h-5" strokeWidth={1.5} />
-              Cloud Integration
-            </CardTitle>
-            <CardDescription>Connect to cloud storage services.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="border border-dashed border-[var(--border-subtle)] bg-[var(--surface-main)]">
-                <CardContent className="flex flex-col items-center justify-center p-6">
-                  <div className="w-10 h-10 bg-[var(--surface-secondary)] flex items-center justify-center mb-2">
-                    <Cloud className="w-5 h-5 text-[var(--text-secondary)]" strokeWidth={1.5} />
-                  </div>
-                  <p className="text-sm font-medium">Google Drive</p>
-                  <Button variant="outline" size="sm" className="mt-3" data-testid="connect-gdrive">
-                    Connect
-                  </Button>
-                </CardContent>
-              </Card>
-              <Card className="border border-dashed border-[var(--border-subtle)] bg-[var(--surface-main)]">
-                <CardContent className="flex flex-col items-center justify-center p-6">
-                  <div className="w-10 h-10 bg-[var(--surface-secondary)] flex items-center justify-center mb-2">
-                    <Cloud className="w-5 h-5 text-[var(--text-secondary)]" strokeWidth={1.5} />
-                  </div>
-                  <p className="text-sm font-medium">Dropbox</p>
-                  <Button variant="outline" size="sm" className="mt-3" data-testid="connect-dropbox">
-                    Connect
-                  </Button>
-                </CardContent>
-              </Card>
-              <Card className="border border-dashed border-[var(--border-subtle)] bg-[var(--surface-main)]">
-                <CardContent className="flex flex-col items-center justify-center p-6">
-                  <div className="w-10 h-10 bg-[var(--surface-secondary)] flex items-center justify-center mb-2">
-                    <Cloud className="w-5 h-5 text-[var(--text-secondary)]" strokeWidth={1.5} />
-                  </div>
-                  <p className="text-sm font-medium">iCloud</p>
-                  <Button variant="outline" size="sm" className="mt-3" data-testid="connect-icloud">
-                    Connect
-                  </Button>
-                </CardContent>
-              </Card>
             </div>
           </CardContent>
         </Card>
@@ -364,12 +328,20 @@ export default function Settings() {
           <CardContent>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
+                <span className="text-[var(--text-secondary)]">Application</span>
+                <span className="font-medium">Digital ProScan</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-[var(--text-secondary)]">Version</span>
                 <span className="font-medium">1.0.0</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[var(--text-secondary)]">Build</span>
                 <span className="font-medium">2026.01.06</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[var(--text-secondary)]">Based On</span>
+                <span className="font-medium">PocketRastrac</span>
               </div>
             </div>
           </CardContent>

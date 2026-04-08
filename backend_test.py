@@ -3,7 +3,7 @@
 import requests
 import sys
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Any
 
 class DigitalProScanAPITester:
@@ -14,9 +14,10 @@ class DigitalProScanAPITester:
         self.tests_passed = 0
         self.test_results = []
         self.created_resources = {
-            'documents': [],
-            'folders': [],
-            'tags': []
+            'team_members': [],
+            'jobs': [],
+            'geofences': [],
+            'alerts': []
         }
 
     def log_test(self, name: str, success: bool, details: str = "", response_data: Any = None):
@@ -44,11 +45,13 @@ class DigitalProScanAPITester:
             if method == 'GET':
                 response = requests.get(url, headers=headers, params=params, timeout=10)
             elif method == 'POST':
-                response = requests.post(url, json=data, headers=headers, timeout=10)
+                response = requests.post(url, json=data, headers=headers, params=params, timeout=10)
             elif method == 'PATCH':
-                response = requests.patch(url, json=data, headers=headers, timeout=10)
+                response = requests.patch(url, json=data, headers=headers, params=params, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, params=params, timeout=10)
             elif method == 'DELETE':
-                response = requests.delete(url, headers=headers, timeout=10)
+                response = requests.delete(url, headers=headers, params=params, timeout=10)
             else:
                 return False, f"Unsupported method: {method}", 0
 
@@ -73,11 +76,11 @@ class DigitalProScanAPITester:
                      f"Status: {status}" if not success else "", data)
 
     def test_stats_endpoint(self):
-        """Test stats endpoint"""
-        print("\n🔍 Testing Stats Endpoint...")
+        """Test dashboard stats endpoint"""
+        print("\n🔍 Testing Dashboard Stats...")
         
         success, data, status = self.make_request('GET', '/stats')
-        expected_fields = ['total_documents', 'total_scans_today', 'total_pages', 'storage_used_mb', 'recent_activity']
+        expected_fields = ['total_team_members', 'working', 'support_activity', 'work_delay', 'traveling', 'idle', 'active_alerts']
         
         if success and status == 200:
             missing_fields = [field for field in expected_fields if field not in data]
@@ -88,211 +91,329 @@ class DigitalProScanAPITester:
         else:
             self.log_test("GET /api/stats", False, f"Status: {status}", data)
 
-    def test_folders_crud(self):
-        """Test folder CRUD operations"""
-        print("\n🔍 Testing Folders CRUD...")
+    def test_team_members_crud(self):
+        """Test team members CRUD operations"""
+        print("\n🔍 Testing Team Members CRUD...")
         
-        # Test GET folders (empty)
-        success, data, status = self.make_request('GET', '/folders')
-        self.log_test("GET /api/folders (initial)", success and status == 200, 
+        # Test GET team members (empty)
+        success, data, status = self.make_request('GET', '/team-members')
+        self.log_test("GET /api/team-members (initial)", success and status == 200, 
                      f"Status: {status}" if not success else "", data)
         
-        # Test CREATE folder
-        folder_data = {"name": "Test Folder", "color": "#FF5733"}
-        success, data, status = self.make_request('POST', '/folders', folder_data)
-        if success and status == 200:
-            folder_id = data.get('id')
-            if folder_id:
-                self.created_resources['folders'].append(folder_id)
-                self.log_test("POST /api/folders", True, "", data)
-                
-                # Test GET folders (with data)
-                success, data, status = self.make_request('GET', '/folders')
-                self.log_test("GET /api/folders (with data)", success and len(data) > 0, 
-                             f"Found {len(data)} folders" if success else f"Status: {status}", data)
-                
-                # Test DELETE folder
-                success, data, status = self.make_request('DELETE', f'/folders/{folder_id}')
-                self.log_test("DELETE /api/folders/{id}", success and status == 200, 
-                             f"Status: {status}" if not success else "", data)
-                if success:
-                    self.created_resources['folders'].remove(folder_id)
-            else:
-                self.log_test("POST /api/folders", False, "No ID in response", data)
-        else:
-            self.log_test("POST /api/folders", False, f"Status: {status}", data)
-
-    def test_tags_crud(self):
-        """Test tag CRUD operations"""
-        print("\n🔍 Testing Tags CRUD...")
-        
-        # Test GET tags (empty)
-        success, data, status = self.make_request('GET', '/tags')
-        self.log_test("GET /api/tags (initial)", success and status == 200, 
-                     f"Status: {status}" if not success else "", data)
-        
-        # Test CREATE tag
-        tag_data = {"name": "Test Tag", "color": "#33FF57"}
-        success, data, status = self.make_request('POST', '/tags', tag_data)
-        if success and status == 200:
-            tag_id = data.get('id')
-            if tag_id:
-                self.created_resources['tags'].append(tag_id)
-                self.log_test("POST /api/tags", True, "", data)
-                
-                # Test GET tags (with data)
-                success, data, status = self.make_request('GET', '/tags')
-                self.log_test("GET /api/tags (with data)", success and len(data) > 0, 
-                             f"Found {len(data)} tags" if success else f"Status: {status}", data)
-                
-                # Test DELETE tag
-                success, data, status = self.make_request('DELETE', f'/tags/{tag_id}')
-                self.log_test("DELETE /api/tags/{id}", success and status == 200, 
-                             f"Status: {status}" if not success else "", data)
-                if success:
-                    self.created_resources['tags'].remove(tag_id)
-            else:
-                self.log_test("POST /api/tags", False, "No ID in response", data)
-        else:
-            self.log_test("POST /api/tags", False, f"Status: {status}", data)
-
-    def test_documents_crud(self):
-        """Test document CRUD operations"""
-        print("\n🔍 Testing Documents CRUD...")
-        
-        # Test GET documents (empty)
-        success, data, status = self.make_request('GET', '/documents')
-        self.log_test("GET /api/documents (initial)", success and status == 200, 
-                     f"Status: {status}" if not success else "", data)
-        
-        # Test CREATE document
-        doc_data = {
-            "name": "test-document.pdf",
-            "file_type": "pdf",
-            "size": 1024000,
-            "page_count": 5,
-            "tags": ["important"]
+        # Test CREATE team member
+        member_data = {
+            "name": "Test Worker",
+            "employee_id": "TEST001",
+            "phone_number": "+1234567890",
+            "email": "test@example.com"
         }
-        success, data, status = self.make_request('POST', '/documents', doc_data)
+        success, data, status = self.make_request('POST', '/team-members', member_data)
         if success and status == 200:
-            doc_id = data.get('id')
-            if doc_id:
-                self.created_resources['documents'].append(doc_id)
-                self.log_test("POST /api/documents", True, "", data)
+            member_id = data.get('id')
+            if member_id:
+                self.created_resources['team_members'].append(member_id)
+                self.log_test("POST /api/team-members", True, "", data)
                 
-                # Test GET single document
-                success, data, status = self.make_request('GET', f'/documents/{doc_id}')
-                self.log_test("GET /api/documents/{id}", success and status == 200, 
+                # Test GET specific team member
+                success, data, status = self.make_request('GET', f'/team-members/{member_id}')
+                self.log_test("GET /api/team-members/{id}", success and status == 200, 
                              f"Status: {status}" if not success else "", data)
                 
-                # Test PATCH document (update)
-                update_data = {"name": "updated-document.pdf", "is_starred": True}
-                success, data, status = self.make_request('PATCH', f'/documents/{doc_id}', update_data)
-                self.log_test("PATCH /api/documents/{id}", success and status == 200, 
+                # Test PATCH team member (update)
+                update_data = {"phone_number": "+1987654321"}
+                success, data, status = self.make_request('PATCH', f'/team-members/{member_id}', update_data)
+                self.log_test("PATCH /api/team-members/{id}", success and status == 200, 
                              f"Status: {status}" if not success else "", data)
                 
-                # Test GET documents with filters
-                success, data, status = self.make_request('GET', '/documents', params={'starred': 'true'})
-                self.log_test("GET /api/documents (starred filter)", success and status == 200, 
-                             f"Found {len(data)} starred docs" if success else f"Status: {status}", data)
-                
-                success, data, status = self.make_request('GET', '/documents', params={'search': 'updated'})
-                self.log_test("GET /api/documents (search filter)", success and status == 200, 
-                             f"Found {len(data)} matching docs" if success else f"Status: {status}", data)
-                
-                # Test DELETE document
-                success, data, status = self.make_request('DELETE', f'/documents/{doc_id}')
-                self.log_test("DELETE /api/documents/{id}", success and status == 200, 
-                             f"Status: {status}" if not success else "", data)
-                if success:
-                    self.created_resources['documents'].remove(doc_id)
+                return member_id
             else:
-                self.log_test("POST /api/documents", False, "No ID in response", data)
+                self.log_test("POST /api/team-members", False, "No ID in response", data)
         else:
-            self.log_test("POST /api/documents", False, f"Status: {status}", data)
+            self.log_test("POST /api/team-members", False, f"Status: {status}", data)
+        return None
 
-    def test_ocr_endpoint(self):
-        """Test OCR extraction (mocked)"""
-        print("\n🔍 Testing OCR Endpoint...")
+    def test_jobs_crud(self):
+        """Test jobs/work orders CRUD operations"""
+        print("\n🔍 Testing Jobs/Work Orders CRUD...")
         
-        # Create a document first
-        doc_data = {
-            "name": "ocr-test.pdf",
-            "file_type": "pdf",
-            "size": 512000,
-            "page_count": 2
+        # Test GET jobs (empty)
+        success, data, status = self.make_request('GET', '/jobs')
+        self.log_test("GET /api/jobs (initial)", success and status == 200, 
+                     f"Status: {status}" if not success else "", data)
+        
+        # Test CREATE job
+        job_data = {
+            "job_wo_number": "TEST-JOB-001",
+            "description": "Test job for API testing",
+            "location": "Test Site",
+            "client_name": "Test Client"
         }
-        success, data, status = self.make_request('POST', '/documents', doc_data)
+        success, data, status = self.make_request('POST', '/jobs', job_data)
         if success and status == 200:
-            doc_id = data.get('id')
-            if doc_id:
-                self.created_resources['documents'].append(doc_id)
+            job_id = data.get('id')
+            if job_id:
+                self.created_resources['jobs'].append(job_id)
+                self.log_test("POST /api/jobs", True, "", data)
                 
-                # Test OCR extraction
-                success, data, status = self.make_request('POST', f'/ocr/{doc_id}')
-                if success and status == 200 and 'ocr_text' in data:
-                    self.log_test("POST /api/ocr/{doc_id} (mocked)", True, "", data)
-                else:
-                    self.log_test("POST /api/ocr/{doc_id} (mocked)", False, 
-                                 f"Status: {status}, Missing ocr_text" if success else f"Status: {status}", data)
+                # Test GET specific job
+                success, data, status = self.make_request('GET', f'/jobs/{job_id}')
+                self.log_test("GET /api/jobs/{id}", success and status == 200, 
+                             f"Status: {status}" if not success else "", data)
                 
-                # Cleanup
-                self.make_request('DELETE', f'/documents/{doc_id}')
-                self.created_resources['documents'].remove(doc_id)
+                # Test archive job
+                success, data, status = self.make_request('PATCH', f'/jobs/{job_id}', params={'is_active': False})
+                self.log_test("PATCH /api/jobs/{id} (archive)", success and status == 200, 
+                             f"Status: {status}" if not success else "", data)
+                
+                # Test restore job
+                success, data, status = self.make_request('PATCH', f'/jobs/{job_id}', params={'is_active': True})
+                self.log_test("PATCH /api/jobs/{id} (restore)", success and status == 200, 
+                             f"Status: {status}" if not success else "", data)
+                
+                return job_id
             else:
-                self.log_test("POST /api/ocr/{doc_id} (setup)", False, "Failed to create test document", data)
+                self.log_test("POST /api/jobs", False, "No ID in response", data)
         else:
-            self.log_test("POST /api/ocr/{doc_id} (setup)", False, f"Failed to create test document: {status}", data)
+            self.log_test("POST /api/jobs", False, f"Status: {status}", data)
+        return None
 
-    def test_activities_endpoint(self):
-        """Test activities endpoint"""
-        print("\n🔍 Testing Activities Endpoint...")
+    def test_geofences_crud(self):
+        """Test geofences CRUD operations"""
+        print("\n🔍 Testing Geofences CRUD...")
         
-        success, data, status = self.make_request('GET', '/activities')
-        self.log_test("GET /api/activities", success and status == 200, 
-                     f"Status: {status}" if not success else f"Found {len(data)} activities", data)
+        # Test GET geofences (empty)
+        success, data, status = self.make_request('GET', '/geofences')
+        self.log_test("GET /api/geofences (initial)", success and status == 200, 
+                     f"Status: {status}" if not success else "", data)
+        
+        # Test CREATE geofence
+        geofence_data = {
+            "name": "Test Geofence",
+            "description": "Test geofence for API testing",
+            "center_lat": 37.7749,
+            "center_lng": -122.4194,
+            "radius": 100,
+            "color": "#002FA7"
+        }
+        success, data, status = self.make_request('POST', '/geofences', geofence_data)
+        if success and status == 200:
+            geofence_id = data.get('id')
+            if geofence_id:
+                self.created_resources['geofences'].append(geofence_id)
+                self.log_test("POST /api/geofences", True, "", data)
+                
+                return geofence_id
+            else:
+                self.log_test("POST /api/geofences", False, "No ID in response", data)
+        else:
+            self.log_test("POST /api/geofences", False, f"Status: {status}", data)
+        return None
+
+    def test_location_tracking(self, member_id):
+        """Test location tracking functionality"""
+        print("\n🔍 Testing Location Tracking...")
+        
+        if not member_id:
+            self.log_test("Location tracking test", False, "No member ID available")
+            return
+        
+        # Test submit location
+        location_data = {
+            "user_id": member_id,
+            "latitude": 37.7749,
+            "longitude": -122.4194,
+            "accuracy": 10.0,
+            "speed": 5.0,
+            "altitude": 100.0,
+            "battery_level": 85
+        }
+        success, data, status = self.make_request('POST', '/locations', location_data)
+        self.log_test("POST /api/locations", success and status == 200, 
+                     f"Status: {status}" if not success else "", data)
+        
+        # Test get locations
+        success, data, status = self.make_request('GET', '/locations')
+        self.log_test("GET /api/locations", success and status == 200, 
+                     f"Status: {status}" if not success else "", data)
+        
+        # Test get user locations
+        success, data, status = self.make_request('GET', '/locations', params={'user_id': member_id})
+        self.log_test("GET /api/locations (user filter)", success and status == 200, 
+                     f"Status: {status}" if not success else "", data)
+
+    def test_status_updates(self, member_id, job_id):
+        """Test status update functionality"""
+        print("\n🔍 Testing Status Updates...")
+        
+        if not member_id:
+            self.log_test("Status updates test", False, "No member ID available")
+            return
+        
+        # Test different status updates
+        statuses = [
+            {"status": "WORKING", "details": "Starting work"},
+            {"status": "SUPPORT_ACTIVITY", "support_activity_type": "SAFETY_MEETING", "details": "Safety briefing"},
+            {"status": "WORK_DELAY", "work_delay_type": "WAITING_PARTS", "details": "Waiting for materials"},
+            {"status": "TRAVELING", "details": "Moving to next location"},
+            {"status": "IDLE", "details": "Break time"}
+        ]
+        
+        for status_data in statuses:
+            status_data["user_id"] = member_id
+            if job_id:
+                status_data["job_wo_id"] = job_id
+                status_data["job_wo_number"] = "TEST-JOB-001"
+            status_data["latitude"] = 37.7749
+            status_data["longitude"] = -122.4194
+            
+            success, data, status = self.make_request('POST', '/status', status_data)
+            self.log_test(f"POST /api/status ({status_data['status']})", success and status == 200, 
+                         f"Status: {status}" if not success else "", data)
+        
+        # Test get status updates
+        success, data, status = self.make_request('GET', '/status')
+        self.log_test("GET /api/status", success and status == 200, 
+                     f"Status: {status}" if not success else "", data)
+        
+        # Test get current statuses
+        success, data, status = self.make_request('GET', '/status/current')
+        self.log_test("GET /api/status/current", success and status == 200, 
+                     f"Status: {status}" if not success else "", data)
+
+    def test_sos_alerts(self, member_id):
+        """Test SOS alert functionality"""
+        print("\n🔍 Testing SOS Alerts...")
+        
+        if not member_id:
+            self.log_test("SOS alerts test", False, "No member ID available")
+            return
+        
+        # Test trigger SOS alert
+        sos_data = {
+            "user_id": member_id,
+            "latitude": 37.7749,
+            "longitude": -122.4194
+        }
+        success, data, status = self.make_request('POST', '/alerts/sos', sos_data)
+        if success and status == 200:
+            alert_id = data.get('id')
+            if alert_id:
+                self.created_resources['alerts'].append(alert_id)
+                self.log_test("POST /api/alerts/sos", True, "", data)
+                
+                # Test get SOS alerts
+                success, data, status = self.make_request('GET', '/alerts/sos')
+                self.log_test("GET /api/alerts/sos", success and status == 200, 
+                             f"Status: {status}" if not success else "", data)
+                
+                # Test acknowledge alert
+                success, data, status = self.make_request('PUT', f'/alerts/sos/{alert_id}/acknowledge', 
+                                                        params={'acknowledged_by': 'Test Admin'})
+                self.log_test("PUT /api/alerts/sos/{id}/acknowledge", success and status == 200, 
+                             f"Status: {status}" if not success else "", data)
+                
+                # Test resolve alert
+                success, data, status = self.make_request('PUT', f'/alerts/sos/{alert_id}/resolve')
+                self.log_test("PUT /api/alerts/sos/{id}/resolve", success and status == 200, 
+                             f"Status: {status}" if not success else "", data)
+                
+                return alert_id
+            else:
+                self.log_test("POST /api/alerts/sos", False, "No ID in response", data)
+        else:
+            self.log_test("POST /api/alerts/sos", False, f"Status: {status}", data)
+        return None
+
+    def test_job_assignment(self, member_id, job_id):
+        """Test job assignment to team members"""
+        print("\n🔍 Testing Job Assignment...")
+        
+        if not member_id or not job_id:
+            self.log_test("Job assignment test", False, "Missing member or job ID")
+            return
+        
+        # Test assign job to member
+        success, data, status = self.make_request('PUT', f'/team-members/{member_id}/job', 
+                                                params={'job_wo_id': job_id, 'job_wo_number': 'TEST-JOB-001'})
+        self.log_test("PUT /api/team-members/{id}/job", success and status == 200, 
+                     f"Status: {status}" if not success else "", data)
+
+    def test_reports(self):
+        """Test reporting endpoints"""
+        print("\n🔍 Testing Reports...")
+        
+        # Test productivity report
+        success, data, status = self.make_request('GET', '/reports/productivity')
+        self.log_test("GET /api/reports/productivity", success and status == 200, 
+                     f"Status: {status}" if not success else "", data)
+        
+        # Test work barriers report
+        success, data, status = self.make_request('GET', '/reports/work-barriers')
+        self.log_test("GET /api/reports/work-barriers", success and status == 200, 
+                     f"Status: {status}" if not success else "", data)
+
+    def test_reference_data(self):
+        """Test reference data endpoints"""
+        print("\n🔍 Testing Reference Data...")
+        
+        # Test support activity types
+        success, data, status = self.make_request('GET', '/support-activities')
+        self.log_test("GET /api/support-activities", success and status == 200, 
+                     f"Status: {status}" if not success else "", data)
+        
+        # Test work delay types
+        success, data, status = self.make_request('GET', '/work-delays')
+        self.log_test("GET /api/work-delays", success and status == 200, 
+                     f"Status: {status}" if not success else "", data)
 
     def test_error_handling(self):
         """Test error handling"""
         print("\n🔍 Testing Error Handling...")
         
-        # Test non-existent document
-        success, data, status = self.make_request('GET', '/documents/non-existent-id')
-        self.log_test("GET /api/documents/{invalid_id}", not success and status == 404, 
+        # Test non-existent team member
+        success, data, status = self.make_request('GET', '/team-members/non-existent-id')
+        self.log_test("GET /api/team-members/{invalid_id}", not success and status == 404, 
                      f"Expected 404, got {status}" if success or status != 404 else "", data)
         
-        # Test invalid document creation
-        invalid_doc = {"name": ""}  # Missing required fields
-        success, data, status = self.make_request('POST', '/documents', invalid_doc)
-        self.log_test("POST /api/documents (invalid data)", not success, 
+        # Test invalid team member creation
+        invalid_member = {"name": ""}  # Missing required fields
+        success, data, status = self.make_request('POST', '/team-members', invalid_member)
+        self.log_test("POST /api/team-members (invalid data)", not success, 
                      f"Expected error, got {status}" if success else "", data)
 
     def cleanup_resources(self):
         """Clean up any remaining test resources"""
         print("\n🧹 Cleaning up test resources...")
         
-        for doc_id in self.created_resources['documents']:
-            self.make_request('DELETE', f'/documents/{doc_id}')
+        # Delete geofences
+        for geofence_id in self.created_resources['geofences']:
+            self.make_request('DELETE', f'/geofences/{geofence_id}')
         
-        for folder_id in self.created_resources['folders']:
-            self.make_request('DELETE', f'/folders/{folder_id}')
-        
-        for tag_id in self.created_resources['tags']:
-            self.make_request('DELETE', f'/tags/{tag_id}')
+        # Delete team members (this should be last as other tests depend on it)
+        for member_id in self.created_resources['team_members']:
+            self.make_request('DELETE', f'/team-members/{member_id}')
 
     def run_all_tests(self):
         """Run all API tests"""
-        print("🚀 Starting Digital ProScan API Tests...")
+        print("🚀 Starting Digital ProScan Workforce Tracking API Tests...")
         print(f"Testing against: {self.base_url}")
+        
+        member_id = None
+        job_id = None
+        geofence_id = None
         
         try:
             self.test_health_endpoints()
             self.test_stats_endpoint()
-            self.test_folders_crud()
-            self.test_tags_crud()
-            self.test_documents_crud()
-            self.test_ocr_endpoint()
-            self.test_activities_endpoint()
+            member_id = self.test_team_members_crud()
+            job_id = self.test_jobs_crud()
+            geofence_id = self.test_geofences_crud()
+            self.test_location_tracking(member_id)
+            self.test_status_updates(member_id, job_id)
+            self.test_sos_alerts(member_id)
+            self.test_job_assignment(member_id, job_id)
+            self.test_reports()
+            self.test_reference_data()
             self.test_error_handling()
         finally:
             self.cleanup_resources()
