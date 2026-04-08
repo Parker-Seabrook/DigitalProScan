@@ -1,34 +1,141 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
-}
+/* Digital ProScan Custom Styles */
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
-}
-
-.App-header {
-    background-color: #0f0f10;
+.proscan-sidebar {
+    background-color: var(--surface-main);
+    border-right: 1px solid var(--border-subtle);
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
+    position: sticky;
+    top: 0;
+}
+
+.proscan-header {
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-subtle);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.proscan-card {
+    background-color: white;
+    border: 1px solid var(--border-subtle);
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+.proscan-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.proscan-upload-zone {
+    background-color: var(--surface-main);
+    border: 2px dashed var(--border-subtle);
+    transition: all 0.2s ease-out;
+    min-height: 200px;
+}
+
+.proscan-upload-zone:hover,
+.proscan-upload-zone.drag-active {
+    border-color: var(--accent-primary);
+    background-color: rgba(0, 47, 167, 0.05);
+}
+
+.proscan-btn-primary {
+    background-color: var(--accent-primary);
     color: white;
+    transition: background-color 0.15s ease-out;
 }
 
-.App-link {
-    color: #61dafb;
+.proscan-btn-primary:hover {
+    background-color: var(--accent-hover);
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
+.proscan-btn-secondary {
+    background-color: white;
+    color: var(--text-primary);
+    border: 1px solid var(--border-strong);
+    transition: all 0.15s ease-out;
+}
+
+.proscan-btn-secondary:hover {
+    background-color: var(--surface-main);
+}
+
+.proscan-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.doc-thumbnail {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.doc-thumbnail::before {
+    content: '';
+    position: absolute;
+    top: 20%;
+    left: 15%;
+    right: 15%;
+    height: 8%;
+    background: #d1d5db;
+    border-radius: 2px;
+}
+
+.doc-thumbnail::after {
+    content: '';
+    position: absolute;
+    top: 35%;
+    left: 15%;
+    right: 25%;
+    bottom: 30%;
+    background: repeating-linear-gradient(
+        to bottom,
+        #d1d5db 0px,
+        #d1d5db 4px,
+        transparent 4px,
+        transparent 10px
+    );
+}
+
+.stat-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background-color: var(--accent-primary);
+}
+
+/* Animation delays for staggered animations */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }
+
+/* Document viewer split pane */
+.viewer-container {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 0;
+    height: calc(100vh - 64px);
+}
+
+@media (max-width: 1024px) {
+    .viewer-container {
+        grid-template-columns: 1fr;
     }
 }
