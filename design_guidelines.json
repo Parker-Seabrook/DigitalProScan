@@ -1,0 +1,82 @@
+{
+  "theme": "light",
+  "archetype": "4 (Swiss & High-Contrast)",
+  "design_philosophy": "Functional beauty with optical clarity. Treat the UI like a high-end Swiss poster mixed with a digital command center. Use strict grids, minimal decoration, and rely entirely on typography, 1px lines, and negative space to define structure.",
+  "colors": {
+    "background": "#FFFFFF",
+    "surface_main": "#F9F9FA",
+    "surface_secondary": "#F3F4F6",
+    "text_primary": "#0A0A0A",
+    "text_secondary": "#52525B",
+    "accent_primary": "#002FA7",
+    "accent_hover": "#00227A",
+    "accent_destructive": "#FF2A2A",
+    "accent_warning": "#FFD700",
+    "border_subtle": "#E5E7EB",
+    "border_strong": "#111827"
+  },
+  "typography": {
+    "heading_font": "Cabinet Grotesk, sans-serif",
+    "body_font": "IBM Plex Sans, sans-serif",
+    "scale": {
+      "h1": "text-4xl tracking-tight font-bold",
+      "h2": "text-2xl tracking-tight font-semibold",
+      "h3": "text-lg tracking-tight font-medium",
+      "body": "text-sm leading-relaxed",
+      "label": "text-xs uppercase tracking-[0.2em] font-medium"
+    }
+  },
+  "spacing_and_layout": {
+    "container_padding": "p-8 md:p-12",
+    "widget_gap": "gap-6",
+    "dashboard_grid": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4",
+    "alignment": "Left-align dense text and data. Center-align empty states and primary drag-and-drop zones."
+  },
+  "surface_styles": {
+    "cards": "bg-white border border-gray-200 rounded-none shadow-sm hover:-translate-y-0.5 transition-transform duration-200",
+    "upload_zone": "bg-gray-50 border-2 border-dashed border-gray-300 hover:border-[#002FA7] hover:bg-blue-50/50 transition-colors duration-200 flex flex-col items-center justify-center p-12",
+    "sidebar": "bg-[#F9F9FA] border-r border-gray-200 h-screen sticky top-0",
+    "header": "bg-white/80 backdrop-blur-xl border-b border-gray-200 sticky top-0 z-50"
+  },
+  "components_strategy": {
+    "buttons": "Square or slightly rounded (rounded-sm) buttons. High contrast. Primary: bg-[#002FA7] text-white. Secondary: bg-white text-[#0A0A0A] border border-[#0A0A0A].",
+    "tables": "Shadcn Table with customized minimal borders. Row borders only (border-b), no vertical cell borders.",
+    "badges": "Square badges, no rounded pills. Solid background with contrasting text.",
+    "forms": "Inputs with 1px border-gray-300, focus:ring-1 focus:ring-[#002FA7] focus:border-[#002FA7]. No heavy shadows."
+  },
+  "animations": {
+    "hover_states": "Fast and crisp. 150ms ease-out on colors, 200ms ease-out on transforms.",
+    "page_transitions": "Fade in and slight slide up (10px) on load for grid items to stagger in."
+  },
+  "icons": {
+    "library": "lucide-react",
+    "style": "Stroke width 1.5, structural and crisp. No filled icons unless for active states."
+  },
+  "media": {
+    "images": [
+      {
+        "category": "user_avatar_1",
+        "url": "https://images.unsplash.com/photo-1634162635368-004f5fb27427?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODF8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB1c2VyJTIwcHJvZmlsZSUyMHBvcnRyYWl0fGVufDB8fHx8MTc3NTY2NTI2MXww&ixlib=rb-4.1.0&q=85",
+        "description": "User profile picture for account settings / header avatar"
+      },
+      {
+        "category": "user_avatar_2",
+        "url": "https://images.unsplash.com/photo-1694457976014-4d160c35cc68?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODF8MHwxfHNlYXJjaHw0fHxwcm9mZXNzaW9uYWwlMjB1c2VyJTIwcHJvZmlsZSUyMHBvcnRyYWl0fGVufDB8fHx8MTc3NTY2NTI2MXww&ixlib=rb-4.1.0&q=85",
+        "description": "Secondary user profile picture for team members / shared docs"
+      }
+    ]
+  },
+  "accessibility": {
+    "contrast": "Maintain APCA/WCAG AA minimums. Ensure placeholder text in inputs meets 4.5:1 ratio.",
+    "focus_states": "All focusable elements MUST have ring-2 ring-offset-2 ring-[#002FA7].",
+    "testing": "Include data-testid on all interactive elements using kebab-case role-based names."
+  },
+  "instructions_to_main_agent": {
+    "1": "Use pure HTML and Tailwind CSS structure inside React components. Map the provided JSON colors directly into tailwind config.",
+    "2": "For the drag-and-drop UI, ensure the hit area is massive (min-h-[300px]) with dashed borders.",
+    "3": "For the document viewer, implement a split-pane layout: Document preview on the left (col-span-8), OCR/Details on the right (col-span-4).",
+    "4": "Make sure the sidebar is slim and collapsible on desktop, and hidden behind a hamburger menu on mobile.",
+    "5": "Do not use Inter for headings. Ensure `Cabinet Grotesk` is imported and used for h1, h2, h3.",
+    "6": "Use the provided image URLs strictly for avatars. For document thumbnails, generate CSS-based abstract representations (e.g., light gray rectangle with dark gray lines acting as text lines)."
+  }
+}
